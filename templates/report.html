@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Test Report - {{ suite.api_name }}</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --red: #f85149;
+            --yellow: #d29922;
+            --purple: #bc8cff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        h2 {
+            font-size: 1.4rem;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .stat-card.passed .value { color: var(--green); }
+        .stat-card.failed .value { color: var(--red); }
+        .stat-card.errors .value { color: var(--yellow); }
+        .stat-card.timeouts .value { color: var(--purple); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        th {
+            background: var(--bg);
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+        td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(88, 166, 255, 0.04); }
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge.passed { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+        .badge.failed { background: rgba(248, 81, 73, 0.15); color: var(--red); }
+        .badge.error { background: rgba(210, 153, 34, 0.15); color: var(--yellow); }
+        .badge.timeout { background: rgba(188, 140, 255, 0.15); color: var(--purple); }
+        .failure-detail {
+            background: var(--surface);
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .failure-detail h3 {
+            color: var(--red);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        .failure-detail code {
+            display: block;
+            background: var(--bg);
+            padding: 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .meta { color: var(--text-muted); font-size: 0.85rem; }
+        .bar-chart {
+            display: flex;
+            height: 24px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .bar-chart .segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 30px;
+        }
+        .bar-chart .segment.passed { background: var(--green); color: #000; }
+        .bar-chart .segment.failed { background: var(--red); color: #fff; }
+        .bar-chart .segment.error { background: var(--yellow); color: #000; }
+        .bar-chart .segment.timeout { background: var(--purple); color: #fff; }
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Chaos Test Report</h1>
+    <p class="subtitle">
+        {{ suite.api_name }} &mdash; {{ suite.base_url }}<br>
+        <span class="meta">
+            {{ suite.start_time.strftime('%Y-%m-%d %H:%M:%S') }} &bull;
+            Duration: {{ "%.2f"|format(suite.duration_seconds) }}s
+        </span>
+    </p>
+
+    <!-- Summary stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="value">{{ suite.total_tests }}</span>
+            <span class="label">Total Tests</span>
+        </div>
+        <div class="stat-card passed">
+            <span class="value">{{ suite.passed }}</span>
+            <span class="label">Passed</span>
+        </div>
+        <div class="stat-card failed">
+            <span class="value">{{ suite.failed }}</span>
+            <span class="label">Failed</span>
+        </div>
+        <div class="stat-card errors">
+            <span class="value">{{ suite.errors }}</span>
+            <span class="label">Errors</span>
+        </div>
+        <div class="stat-card timeouts">
+            <span class="value">{{ suite.timeouts }}</span>
+            <span class="label">Timeouts</span>
+        </div>
+        <div class="stat-card">
+            <span class="value">{{ "%.1f"|format(suite.pass_rate) }}%</span>
+            <span class="label">Pass Rate</span>
+        </div>
+    </div>
+
+    <!-- Visual bar -->
+    {% if suite.total_tests > 0 %}
+    <div class="bar-chart">
+        {% if suite.passed > 0 %}
+        <div class="segment passed" style="flex: {{ suite.passed }};">{{ suite.passed }}</div>
+        {% endif %}
+        {% if suite.failed > 0 %}
+        <div class="segment failed" style="flex: {{ suite.failed }};">{{ suite.failed }}</div>
+        {% endif %}
+        {% if suite.errors > 0 %}
+        <div class="segment error" style="flex: {{ suite.errors }};">{{ suite.errors }}</div>
+        {% endif %}
+        {% if suite.timeouts > 0 %}
+        <div class="segment timeout" style="flex: {{ suite.timeouts }};">{{ suite.timeouts }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Results by Strategy -->
+    <h2>Results by Strategy</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Strategy</th>
+                <th>Total</th>
+                <th>Passed</th>
+                <th>Failed</th>
+                <th>Errors</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for strategy_name, results in by_strategy.items() %}
+            <tr>
+                <td>{{ strategy_name }}</td>
+                <td>{{ results|length }}</td>
+                <td>{{ results|selectattr('status', 'equalto', TestStatus.PASSED)|list|length }}</td>
+                <td>{{ results|selectattr('status', 'equalto', TestStatus.FAILED)|list|length }}</td>
+                <td>{{ results|selectattr('status', 'equalto', TestStatus.ERROR)|list|length }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- All Results -->
+    <h2>All Test Results</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Status</th>
+                <th>Strategy</th>
+                <th>Description</th>
+                <th>Code</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for result in suite.results %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><span class="badge {{ result.status.value }}">{{ result.status.value }}</span></td>
+                <td>{{ result.test_case.strategy.value }}</td>
+                <td>{{ result.test_case.description }}</td>
+                <td>{{ result.status_code or '-' }}</td>
+                <td>{{ "%.0f"|format(result.response_time_ms) }}ms</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Failure Details -->
+    {% if failures_by_endpoint %}
+    <h2>Failure Analysis</h2>
+    {% for endpoint_name, failures in failures_by_endpoint.items() %}
+        <h3 style="color: var(--red); margin: 1rem 0 0.5rem;">{{ endpoint_name }}</h3>
+        {% for result in failures %}
+        <div class="failure-detail">
+            <h3>{{ result.test_case.description }}</h3>
+            <p class="meta">
+                Strategy: {{ result.test_case.strategy.value }} &bull;
+                Status: {{ result.status_code or 'N/A' }} &bull;
+                Time: {{ "%.0f"|format(result.response_time_ms) }}ms
+            </p>
+            {% if result.error_message %}
+            <p><strong>Error:</strong> {{ result.error_message }}</p>
+            {% endif %}
+            {% if result.response_body %}
+            <p><strong>Response:</strong></p>
+            <code>{{ result.response_body[:500] }}</code>
+            {% endif %}
+            <p style="margin-top: 0.8rem;"><strong>Reproduce:</strong></p>
+            <code>{{ result.reproduction_curl }}</code>
+        </div>
+        {% endfor %}
+    {% endfor %}
+    {% endif %}
+
+    <footer>
+        Generated by API Chaos Tester v1.0.0 &mdash; Maharshi Soni
+    </footer>
+</div>
+</body>
+</html>
