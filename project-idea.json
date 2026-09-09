@@ -1,0 +1,34 @@
+{
+  "project_name": "api-chaos-tester",
+  "title": "API Chaos Tester - Intelligent API Fuzz Testing",
+  "category": "qa-ai-automation",
+  "difficulty": "advanced",
+  "description": "Intelligent API testing from OpenAPI specs. ML failure prediction, property-based testing, chaos strategies (boundary, type confusion, null injection, Unicode), HTML reports.",
+  "tech_stack": [
+    "httpx",
+    "pydantic",
+    "pyyaml",
+    "scikit-learn",
+    "click",
+    "rich",
+    "jinja2",
+    "pytest"
+  ],
+  "features": [
+    "OpenAPI spec parsing",
+    "ML failure prediction",
+    "Property-based testing",
+    "Chaos strategies",
+    "Concurrent testing",
+    "HTML report with failure analysis"
+  ],
+  "test_status": "PASSED",
+  "sample_input": {
+    "description": "OpenAPI spec and target URL",
+    "example": "chaos-test run --spec petstore.yaml --base-url http://localhost:8000"
+  },
+  "sample_output": {
+    "description": "Chaos test report",
+    "example": "Tested 7 endpoints, 156 scenarios: 12 failures found"
+  }
+}
