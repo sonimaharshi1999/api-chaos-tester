@@ -251,6 +251,25 @@ api-chaos-tester/
 
 ---
 
+
+
+---
+
+## Sample Input / Output
+
+![Sample Input and Output](assets/io-card.png)
+
+---
+
+## Project Overview
+
+![Project Summary](assets/report-card.png)
+
+### Reports
+- [HTML Report](reports/api-chaos-tester-report.html) - interactive report
+- [PDF Report](reports/api-chaos-tester-report.pdf) - downloadable PDF
+- [TXT Report](reports/api-chaos-tester-report.txt) - plain text
+
 ## Author
 
 **Maharshi Soni** -- Built as part of a daily AI/ML engineering portfolio.
